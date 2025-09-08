@@ -1,0 +1,43 @@
+body{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    background-color: rgb(238, 156, 156);
+   
+}
+#first-box{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2rem;
+}
+#search-box{
+    background-color: bisque;
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+#second{
+    background-color: rgb(135, 180, 165);
+    display: flex;
+    justify-content:center;
+    width: 50%;
+    margin-top: 2rem;
+    padding: 2rem;
+    border-radius: 1rem;
+}
+#content{
+    background-color: rgb(243, 212, 212);
+    padding: 2rem;
+    border-radius: 1rem;
+}
+#result{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(250, 198, 130);
+    height: auto;
+    width: auto;
+    overflow: scroll;
+    margin-top: 1rem;
+}

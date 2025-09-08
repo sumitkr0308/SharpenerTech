@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes Manager</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <!-- header -->
+     <div id="first-box">
+     <div id="search-box">
+        <h1 id="title">Notebook</h1>
+
+        <!-- search -->
+         <input type="search" placeholder="Search your Book"  id="bookName">
+         <button type="submit" id="search-btn">Search</button>
+         <br>
+         <div id="stats">
+          <p id="total-books">Total Books: 0</p>
+            <p id="displayed-books">Displayed Books: 0</p>
+    </div>
+    </div>
+    <br>
+     </div  >
+     <!-- content -->
+      <div id="second">
+      <div id="content">
+        <input type="text" placeholder="Enter the Book Title">
+        <br>
+        <label for="description">Add Description</label><br>
+        <textarea name="description" id="description"></textarea>
+        <br>
+        <button type="submit">Add Book</button>
+      </div>
+      </div>
+
+      <!-- results -->
+       <div id="result">
+       <ul></ul>
+        </div>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="./index.js"></script>
+</body>
+</html>
