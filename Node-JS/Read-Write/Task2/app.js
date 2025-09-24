@@ -21,13 +21,13 @@ const server = http.createServer((req, res) => {
                 <html>
                   <head><title>Message Board</title></head>
                   <body>
-                    <h2>Messages</h2>
+                    <h2>Recent Messages</h2>
                     ${messages || "<p>No messages yet!</p>"}
                     <hr />
                     <form action="/message" method="POST">
-                        <label>Name: </label>
+                        <label>Message: </label>
                         <input type="text" name="username" />
-                        <button type="submit">ADD</button>
+                        <button type="submit">Send</button>
                     </form>
                   </body>
                 </html>
