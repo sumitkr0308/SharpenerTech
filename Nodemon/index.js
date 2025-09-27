@@ -6,7 +6,7 @@ const server=http.createServer((req,res)=>{
             <h1>Hello I am Sumit</h1>
             <h2>I am a Sharpennerians</h2>
             <h3>I Love Coding</h3>
-            </h4>I want to be a good SDE</h4>`)
+            </h4>I want to be a good SDE`)
     }
 })
 
