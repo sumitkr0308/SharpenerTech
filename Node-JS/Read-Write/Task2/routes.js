@@ -42,7 +42,7 @@ const requestHander =(req,res)=>{
 
         req.on("end", () => {
             const parsedBody = Buffer.concat(body).toString();
-            const name = parsedBody.split("=")[1].replace(/\+/g, " "); // handle spaces
+            const name = parsedBody.split("=")[0].replace(/\+/g, " "); // handle spaces
 
             // Append new message to file
             fs.appendFile("messages.txt", name + "\n", (err) => {
