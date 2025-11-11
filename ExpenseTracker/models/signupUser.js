@@ -14,4 +14,6 @@ const user=sequelize.define('user',{
         type:DataTypes.STRING,
         allowNull:false
     }
-})
+});
+
+module.exports=user;

@@ -1,33 +1,28 @@
-const express=require("express");
+const express = require("express");
 const cors = require('cors');
+const app = express();
 
-const app=express();
-const expenseRoutes=require("./routes/expenseRoutes");
-const expenseController=require("./controllers/expenseController")
-const userRoutes=require('./routes/userRoutes');
-const userControllers=require('./controllers/userController');
+const db = require("./utils/db");
+const expenseRoutes = require("./routes/expenseRoutes");
+const userRoutes = require('./routes/userRoutes');
+const expenseController = require("./controllers/expenseController");
 
-const db=require("./utils/db");
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// models
+// Models
 require("./models/expense");
-require("./models/signupUser")
+require("./models/signupUser");
 
+// Routes
 app.get('/', expenseController.getExpenseHome);
-app.use('/signup',userRoutes)
+app.use('/signup', userRoutes);
+app.use("/api/expenses", expenseRoutes);
 
-app.use("/api/expenses",expenseRoutes);
-
-
-db.sync({force:true}).then(()=>{
-
-    app.listen(4000,()=>{
-    console.log("Server is running");
-})
-
-}).catch((err)=>{
-    console.log(err)
-});
+// Sync database
+db.sync({ alter: true })
+  .then(() => {
+    app.listen(4000, () => console.log("🚀 Server running on port 4000"));
+  })
+  .catch(err => console.error("❌ Database error:", err));
