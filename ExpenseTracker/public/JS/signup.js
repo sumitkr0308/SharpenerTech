@@ -24,7 +24,7 @@ form.addEventListener('submit',async(event)=>{
 
         if (response.ok) {
           alert("Signup successful! Redirecting to expense tracker...");
-          window.location.href = "expense.html";
+          window.location.href = "login.html";
         } else {
           alert(data.message || "Signup failed. Try again.");
         }

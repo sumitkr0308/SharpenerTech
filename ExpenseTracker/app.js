@@ -20,6 +20,7 @@ app.get('/', expenseController.getExpenseHome);
 app.use('/signup', userRoutes);
 app.use("/api/expenses", expenseRoutes);
 
+
 // Sync database
 db.sync({ alter: true })
   .then(() => {
