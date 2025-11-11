@@ -6,6 +6,7 @@ const db = require("./utils/db");
 const expenseRoutes = require("./routes/expenseRoutes");
 const userRoutes = require('./routes/userRoutes');
 const expenseController = require("./controllers/expenseController");
+const userController=require("./controllers/userController")
 
 app.use(cors());
 app.use(express.json());
@@ -20,7 +21,8 @@ app.get('/', expenseController.getExpenseHome);
 app.use('/signup', userRoutes);
 app.use("/api/expenses", expenseRoutes);
 
-
+// login
+app.post("/login",userController.loginUser);
 // Sync database
 db.sync({ alter: true })
   .then(() => {

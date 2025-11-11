@@ -12,7 +12,7 @@ form.addEventListener("submit", async (event) => {
   }
 
   try {
-    const response = await fetch("http://localhost:4000/signup/login", {
+    const response = await fetch("http://localhost:4000/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
