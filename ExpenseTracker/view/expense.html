@@ -11,9 +11,9 @@
     <h1 class="text-center mt-5 mb-5">Expense Tracker</h1>
     <!-- form -->
      <form id="expenseForm">
-        <label for="expName" class="form-lebel">Expense Name:  </label>
+        <label for="expName" class="form-lebel">Expense Description: </label>
         <input type="text" id="expName" required class="form-control-sm" />
-        <label for="amt" class="form-lebel ">Amount: </label>
+        <label for="amt" class="form-lebel ">Expense Amount: </label>
         <input type="number" id="amt" required class="form-control-sm"/>
         <select id="expenseCategory" class="form-select-sm" required>
               <option value="">Choose Category</option>
@@ -23,7 +23,7 @@
               <option>Entertainment</option>
               <option>Other</option>
         </select>
-        <button type="submit" class="btn btn-primary" id="AddBtn">Add</button>
+        <button type="submit" class="btn btn-primary" id="AddBtn">Add Expense</button>
      </form>
      <!-- Expense Table -->
       <ul id="expanseDisplay">

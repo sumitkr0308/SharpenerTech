@@ -1,3 +1,8 @@
+if (localStorage.getItem("isLoggedIn") !== "true") {
+  window.location.href = "login.html"; // redirect if not logged in
+}
+
+
 const expenseForm = document.getElementById("expenseForm");
 const expenseDisplay = document.getElementById("expanseDisplay");
 const addBtn = document.getElementById("AddBtn");
@@ -24,12 +29,12 @@ async function renderExpenses() {
 
     li.innerHTML = `
       <div>
-        <strong>${exp.name}</strong> - ₹${exp.amount} 
+        <strong>${exp.description}</strong> - ₹${exp.amount} 
         <span class="badge bg-secondary ms-2">${exp.category}</span>
       </div>
       <div>
         <button class="btn btn-warning btn-sm me-2" 
-          onclick="editExpense(${exp.id}, '${exp.name}', ${exp.amount}, '${exp.category}')">Edit</button>
+          onclick="editExpense(${exp.id}, '${exp.description}', ${exp.amount}, '${exp.category}')">Edit</button>
         
         <button class="btn btn-danger btn-sm" onclick="deleteExpense(${exp.id})">Delete</button>
       </div>
@@ -43,12 +48,12 @@ async function renderExpenses() {
 expenseForm.addEventListener("submit", async function (e) {
   e.preventDefault();
 
-  const name = document.getElementById("expName").value;
+  const description = document.getElementById("expName").value;
   const amount = parseFloat(document.getElementById("amt").value);
   const category = document.getElementById("expenseCategory").value;
 
   const editId = expenseForm.dataset.editId;
-  const expenseData = { name, amount, category };
+  const expenseData = { description, amount, category };
 
   if (editId) {
     // --- UPDATE (PUT Request) ---
@@ -86,9 +91,9 @@ async function deleteExpense(id) { // This 'id' is now the correct database ID
 
 // Edit Expense
 // This function now receives the correct data from the 'onclick' event
-function editExpense(id, name, amount, category) { 
+function editExpense(id, description, amount, category) { 
   // Populate the form
-  document.getElementById("expName").value = name;
+  document.getElementById("expName").value = description;
   document.getElementById("amt").value = amount;
   document.getElementById("expenseCategory").value = category;
 

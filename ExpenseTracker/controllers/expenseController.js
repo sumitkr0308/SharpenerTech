@@ -21,10 +21,10 @@ const getAllExpenses = async (req, res) => {
 // add Expenses
 const addExpense= async (req,res)=>{
     try {
-        const {name,amount,category}=req.body;
+        const {amount,description,category}=req.body;
         const expense= await Expenses.create({
-            name,
             amount,
+            description,
             category
         });
 
@@ -39,9 +39,9 @@ const addExpense= async (req,res)=>{
 const editExpense=async(req,res)=>{
    try {
          const {id}=req.params;
-        const {name,amount,category}=req.body;
+        const {amount,description,category}=req.body;
         const updatedExpense=await Expenses.findByPk(id);
-        updatedExpense.name=name;
+        updatedExpense.description=description;
         updatedExpense.amount=amount;
         updatedExpense.category=category;
         

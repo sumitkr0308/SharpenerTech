@@ -23,8 +23,8 @@ form.addEventListener("submit", async (event) => {
     const data = await response.json();
 
     if (response.ok) {
-      alert("Login successful!");
       // redirect  expense page
+      localStorage.setItem("isLoggedIn", "true");
       window.location.href = "expense.html"; 
     } else {
       alert(data.message || "Invalid email or password.");
