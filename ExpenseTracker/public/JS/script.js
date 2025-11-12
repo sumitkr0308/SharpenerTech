@@ -1,106 +1,164 @@
-if (localStorage.getItem("isLoggedIn") !== "true") {
-  window.location.href = "login.html"; // redirect if not logged in
+const API_URL = "http://localhost:4000/api/expenses";
+const token = localStorage.getItem("token");
+
+// Redirect if user not logged in
+if (!token) {
+  alert("Please login first.");
+  window.location.href = "login.html";
 }
 
-
+// DOM Elements
 const expenseForm = document.getElementById("expenseForm");
-const expenseDisplay = document.getElementById("expanseDisplay");
+const expenseDisplay = document.getElementById("expenseDisplay");
 const addBtn = document.getElementById("AddBtn");
 
-// 1. FIX: Your API path was missing '/api/expenses'
-const API_URL = 'http://localhost:4000/api/expenses'; 
-
-// We don't need these lines anymore, the server handles all data
-// let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
-// let editIndex = null; 
-
-// Render Expenses
+// Render all expenses
 async function renderExpenses() {
   expenseDisplay.innerHTML = "";
-  
-  // Use the correct API_URL
-  const response = await fetch(API_URL);
-  const expenses = await response.json();
 
-  // We don't need 'index' here, we use 'exp.id'
-  expenses.forEach((exp) => { 
-    const li = document.createElement("li");
-    li.className = "list-group-item d-flex justify-content-between align-items-center my-2 border p-2";
+  try {
+    const response = await fetch(API_URL, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    li.innerHTML = `
-      <div>
-        <strong>${exp.description}</strong> - ₹${exp.amount} 
-        <span class="badge bg-secondary ms-2">${exp.category}</span>
-      </div>
-      <div>
-        <button class="btn btn-warning btn-sm me-2" 
-          onclick="editExpense(${exp.id}, '${exp.description}', ${exp.amount}, '${exp.category}')">Edit</button>
-        
-        <button class="btn btn-danger btn-sm" onclick="deleteExpense(${exp.id})">Delete</button>
-      </div>
-    `;
+    const expenses = await response.json();
 
-    expenseDisplay.appendChild(li);
-  });
+    if (!response.ok) {
+      console.error("Failed to load expenses:", expenses);
+      alert(expenses.message || "Unable to fetch expenses. Please login again.");
+      return;
+    }
+
+    // Wrap in array if single object
+    const expenseList = Array.isArray(expenses) ? expenses : [expenses];
+
+    if (expenseList.length === 0) {
+      expenseDisplay.innerHTML = `<li class="list-group-item text-center">No expenses found.</li>`;
+      return;
+    }
+
+    expenseList.forEach((exp) => addExpenseToList(exp));
+  } catch (error) {
+    console.error("Error fetching expenses:", error);
+  }
 }
 
-// Add or Update Expense
+//  Add expense (POST) or Update expense (PUT)
 expenseForm.addEventListener("submit", async function (e) {
   e.preventDefault();
 
-  const description = document.getElementById("expName").value;
+  const description = document.getElementById("expName").value.trim();
   const amount = parseFloat(document.getElementById("amt").value);
-  const category = document.getElementById("expenseCategory").value;
+  const category = document.getElementById("expenseCategory").value.trim();
 
-  const editId = expenseForm.dataset.editId;
-  const expenseData = { description, amount, category };
-
-  if (editId) {
-    // --- UPDATE (PUT Request) ---
-    // Use the correct API_URL
-    await fetch(`${API_URL}/${editId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(expenseData)
-    });
-    delete expenseForm.dataset.editId;
-  } else {
-    // --- ADD NEW (POST Request) ---
-    // Use the correct API_URL
-    await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(expenseData)
-    });
+  if (!description || !amount || !category) {
+    alert("Please fill in all fields.");
+    return;
   }
 
-  addBtn.textContent = "Add";
-  expenseForm.reset();
-  renderExpenses(); // Re-fetch all expenses from server
+  const expenseData = { description, amount, category };
+  const editId = expenseForm.dataset.editId;
+
+  try {
+    let response;
+    if (editId) {
+      // Update existing expense
+      response = await fetch(`${API_URL}/${editId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(expenseData),
+      });
+
+      addBtn.textContent = "Add";
+      delete expenseForm.dataset.editId;
+    } else {
+      // ✅ Add new expense
+      response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(expenseData),
+      });
+    }
+
+    const data = await response.json();
+
+    if (response.ok) {
+      if (editId) {
+        // Re-render all for simplicity
+        await renderExpenses();
+      } else {
+        addExpenseToList(data); // Add single expense dynamically
+      }
+      expenseForm.reset();
+    } else {
+      console.error("Error adding/updating expense:", data);
+      alert(data.message || "Failed to save expense.");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
 });
 
-// Delete Expense
-async function deleteExpense(id) { // This 'id' is now the correct database ID
-  // --- DELETE Request ---
-  // Use the correct API_URL
-  await fetch(`${API_URL}/${id}`, {
-    method: 'DELETE'
-  });
-  renderExpenses(); // Re-fetch
+// Add expense item to UI
+function addExpenseToList(exp) {
+  const li = document.createElement("li");
+  li.className =
+    "list-group-item d-flex justify-content-between align-items-center my-2 border p-2";
+
+  li.innerHTML = `
+    <div>
+      <strong>${exp.description}</strong> - ₹${exp.amount}
+      <span class="badge bg-secondary ms-2">${exp.category}</span>
+    </div>
+    <div>
+      <button class="btn btn-warning btn-sm me-2" 
+        onclick="editExpense(${exp.id}, '${exp.description}', ${exp.amount}, '${exp.category}')">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteExpense(${exp.id})">Delete</button>
+    </div>
+  `;
+
+  expenseDisplay.appendChild(li);
 }
 
-// Edit Expense
-// This function now receives the correct data from the 'onclick' event
-function editExpense(id, description, amount, category) { 
-  // Populate the form
+//  Delete expense
+async function deleteExpense(id) {
+  if (!confirm("Are you sure you want to delete this expense?")) return;
+
+  try {
+    const response = await fetch(`${API_URL}/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert("Expense deleted!");
+      renderExpenses(); 
+    } else {
+      console.error("Delete error:", data);
+      alert(data.message || "Failed to delete expense.");
+    }
+  } catch (error) {
+    console.error("Error deleting expense:", error);
+  }
+}
+
+
+function editExpense(id, description, amount, category) {
   document.getElementById("expName").value = description;
   document.getElementById("amt").value = amount;
   document.getElementById("expenseCategory").value = category;
 
-  // Store the ID on the form element itself
   expenseForm.dataset.editId = id;
   addBtn.textContent = "Update";
 }
 
-// Initial Render
-renderExpenses();
+// ✅ Initial load
+document.addEventListener("DOMContentLoaded", renderExpenses);

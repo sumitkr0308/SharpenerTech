@@ -1,6 +1,7 @@
 const user=require("../models/signupUser");
 const path=require("path");
 const bcrypt=require("bcrypt");
+const jwt=require("jsonwebtoken");
 
 const getSignPage=(req,res)=>{
 
@@ -38,6 +39,11 @@ const signupUser=async(req,res)=>{
     }
 }
 
+
+//jwt token
+const generateTokens=(userId)=>{
+    return jwt.sign({userId},"secret-key",{expiresIn:"1h"});
+}
 // login
 const loginUser=async(req,res)=>{
     try {
@@ -59,8 +65,8 @@ const loginUser=async(req,res)=>{
         if (!validPassword) {
          return res.status(401).json({ message: "Invalid credentials." });
          }  
-        
-        res.status(200).json({ message: "Login successful", user: existingUser });  
+        const token = generateTokens(existingUser.id);
+        res.status(200).json({ message: "Login successful", user: existingUser,token:token });  
     
     } catch (error) {
         console.error("Login Error:", error);

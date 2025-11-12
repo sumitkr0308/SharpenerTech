@@ -1,5 +1,6 @@
 const {DataTypes}=require("sequelize");
 const sequelize=require("../utils/db");
+const User=require("./signupUser");
 
 const expense= sequelize.define('expense',{
     amount:{
@@ -15,5 +16,11 @@ const expense= sequelize.define('expense',{
         allowNull:false
     }
 });
+
+
+// relationship
+User.hasMany(expense);
+expense.belongsTo(User);
+
 
 module.exports=expense;

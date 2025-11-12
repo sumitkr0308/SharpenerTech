@@ -10,8 +10,10 @@ const getExpenseHome=(req,res)=>{
 // get all expense
 
 const getAllExpenses = async (req, res) => {
+  console.log("Decoded user:", req.user);
   try {
-    const expenses = await Expenses.findAll();
+    const userId=req.user.userId;
+    const expenses = await Expenses.findAll({where:{UserId:userId}});
     res.status(200).json(expenses);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -22,13 +24,16 @@ const getAllExpenses = async (req, res) => {
 const addExpense= async (req,res)=>{
     try {
         const {amount,description,category}=req.body;
+        const userId=req.user.id;
         const expense= await Expenses.create({
             amount,
             description,
-            category
+            category,
+            UserId:userId
         });
-
+        console.log("Expense created:", expense.dataValues);
         res.status(201).json(expense);
+        
         
     } catch (error) {
         res.status(500).json({error:error.message});
@@ -39,8 +44,9 @@ const addExpense= async (req,res)=>{
 const editExpense=async(req,res)=>{
    try {
          const {id}=req.params;
+        const userId = req.user.userId;
         const {amount,description,category}=req.body;
-        const updatedExpense=await Expenses.findByPk(id);
+        const updatedExpense=await Expenses.findOne({where:{id:id,UserId:userId}});
         updatedExpense.description=description;
         updatedExpense.amount=amount;
         updatedExpense.category=category;
@@ -60,7 +66,8 @@ const deleteExpense=async(req,res)=>{
    try {
 
     const {id}=req.params;
-    await Expenses.destroy({ where: { id: id } });
+    const userId=req.user.userId;
+    await Expenses.destroy({ where: { id: id,UserId:userId } });
     res.status(200).json({ message: 'Expense deleted' });
     
    } catch (error) {

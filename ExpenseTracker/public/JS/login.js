@@ -12,7 +12,7 @@ form.addEventListener("submit", async (event) => {
   }
 
   try {
-    const response = await fetch("http://localhost:4000/login", {
+    const response = await fetch("http://localhost:4000/user/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -24,8 +24,8 @@ form.addEventListener("submit", async (event) => {
 
     if (response.ok) {
       // redirect  expense page
-      localStorage.setItem("isLoggedIn", "true");
-      window.location.href = "expense.html"; 
+      localStorage.setItem("token", data.token);
+      window.location.href = "expense.html";
     } else {
       alert(data.message || "Invalid email or password.");
     }
