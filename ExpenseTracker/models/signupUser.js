@@ -1,19 +1,25 @@
-const {DataTypes} =require('sequelize');
-const sequelize=require('../utils/db');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../utils/db");
 
-const user=sequelize.define('user',{
-    name:{
-        type:DataTypes.STRING,
-        allowNull:false
-    },
-    email:{
-        type:DataTypes.STRING,
-        allowNull:false
-    },
-    password:{
-        type:DataTypes.STRING,
-        allowNull:false
-    }
+const User = sequelize.define("User", {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  isPremium: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
 });
 
-module.exports=user;
+module.exports = User;

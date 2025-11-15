@@ -24,7 +24,7 @@ const getAllExpenses = async (req, res) => {
 const addExpense= async (req,res)=>{
     try {
         const {amount,description,category}=req.body;
-        const userId=req.user.id;
+        const userId=req.user.userId;
         const expense= await Expenses.create({
             amount,
             description,

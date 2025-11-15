@@ -1,5 +1,37 @@
 const API_URL = "http://localhost:4000/api/expenses";
 const token = localStorage.getItem("token");
+const premiumBtn = document.getElementById("premiumBtn");
+
+      premiumBtn.addEventListener("click", async () => {
+        try {
+          const response = await fetch("http://localhost:4000/api/orders/create-order", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            alert("Failed to start payment");
+            return;
+          }
+
+          const cf = new Cashfree();
+
+          // Open Cashfree checkout
+          cf.pay({
+            orderToken: data.cashfreeData.order_token
+          });
+
+          alert("Transaction Successful!");
+        } catch (error) {
+          alert("Transaction Failed!");
+          console.error(error);
+        }
+      });
 
 // Redirect if user not logged in
 if (!token) {
@@ -32,10 +64,7 @@ async function renderExpenses() {
     // Wrap in array if single object
     const expenseList = Array.isArray(expenses) ? expenses : [expenses];
 
-    if (expenseList.length === 0) {
-      expenseDisplay.innerHTML = `<li class="list-group-item text-center">No expenses found.</li>`;
-      return;
-    }
+   
 
     expenseList.forEach((exp) => addExpenseToList(exp));
   } catch (error) {
