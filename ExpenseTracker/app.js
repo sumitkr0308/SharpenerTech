@@ -7,6 +7,7 @@ const expenseRoutes = require("./routes/expenseRoutes");
 const userRoutes = require('./routes/userRoutes');
 const expenseController = require("./controllers/expenseController");
 const orderRoutes = require("./routes/orderRoutes");
+const paymentRoutes=require("./routes/paymentRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -16,6 +17,7 @@ app.use(express.static('public'));
 require("./models/signupUser");
 require("./models/expense");
 require("./models/order");
+require("./models/payment")
 
 
 // Routes
@@ -23,8 +25,9 @@ app.get('/', expenseController.getExpenseHome);
 app.use('/user', userRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/payments", paymentRoutes);
 // Sync database
-db.sync({ force: true })
+db.sync({ alter: true })
   .then(() => {
     app.listen(4000, () => console.log("🚀 Server running on port 4000"));
   })

@@ -1,37 +1,40 @@
 const API_URL = "http://localhost:4000/api/expenses";
 const token = localStorage.getItem("token");
-const premiumBtn = document.getElementById("premiumBtn");
 
-      premiumBtn.addEventListener("click", async () => {
-        try {
-          const response = await fetch("http://localhost:4000/api/orders/create-order", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          });
+    const cashfree = Cashfree({
+            mode: "sandbox" // or "production"
+        });
 
-          const data = await response.json();
+        document.getElementById("premiumBtn").addEventListener("click", async () => {
+            
+            // STEP 1: Call backend to create order
+            const response = await fetch("http://localhost:4000/api/payments/create-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    amount: 500,               // amount in rupees
+                    customerId: "USER_001",
+                    customerPhone: "9876543210"
+                })
+            });
 
-          if (!response.ok) {
-            alert("Failed to start payment");
-            return;
-          }
+            const data = await response.json();
 
-          const cf = new Cashfree();
+            if (!data.paymentSessionId) {
+                alert("Failed to create order: " + data.message);
+                return;
+            }
 
-          // Open Cashfree checkout
-          cf.pay({
-            orderToken: data.cashfreeData.order_token
-          });
+            // STEP 2: Open Cashfree Checkout
+            const checkoutOptions = {
+                paymentSessionId: data.paymentSessionId,
+                redirectTarget: "_self",
+            };
 
-          alert("Transaction Successful!");
-        } catch (error) {
-          alert("Transaction Failed!");
-          console.error(error);
-        }
-      });
+            cashfree.checkout(checkoutOptions);
+        })
+
+
 
 // Redirect if user not logged in
 if (!token) {
