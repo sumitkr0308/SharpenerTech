@@ -36,9 +36,10 @@ const Payment = sequelize.define(
     },
 
     status: {
-      type: DataTypes.ENUM("PENDING", "SUCCESS", "FAILED"),
-      defaultValue: "PENDING",
-    },
+        type: DataTypes.STRING(20),
+        allowNull: false,
+        defaultValue: "PENDING"
+      },
 
     transactions: {
       type: DataTypes.JSON,

@@ -18,8 +18,6 @@ const createOrder = async (
   customerPhone
 ) => {
   try {
-    const expiryDate = new Date(Date.now() + 60 * 60 * 1000);
-    const formattedDate = expiryDate.toISOString();
 
     const request = {
       order_amount: orderAmount,
@@ -29,22 +27,22 @@ const createOrder = async (
       customer_details: {
         customer_id: customerId,
         customer_phone: customerPhone,
+        customer_email: "test@example.com"
       },
 
-      order_meta: {
-        return_url: "http://localhost:4000/api/payments/payment-status/" + orderId,
-        payment_methods: "cc,dc,upi",
-      },
+     order_meta: {
+   return_url: "http://127.0.0.1:5500/ExpenseTracker/view/payment-success.html?orderId={order_id}",
+   payment_methods: "cc,dc,upi"
+}
 
-      order_expiry_time: formattedDate,
     };
 
-    // ❗ Correct function call as per Cashfree SDK
+    // Correct function call as per Cashfree SDK
     const response = await cashfree.PGCreateOrder(request);
 
     console.log("Order created successfully");
 
-    // ❗ Correct response path
+    // Correct response path
     return response.data.payment_session_id;
 
   } catch (error) {
@@ -62,24 +60,26 @@ const getPaymentStatus = async (orderId) => {
     const response = await cashfree.PGOrderFetchPayments(orderId);
 
     const payments = response.data;
+
+    console.log("🔍 RAW CASHFREE RESPONSE:", payments);
+
     let orderStatus = "PENDING";
 
     const successfulPayment = payments.filter(
-      (txn) => txn.payment.status === "SUCCESS"
+      (txn) => txn.payment_status === "SUCCESS"
     );
 
     if (successfulPayment.length > 0) {
       orderStatus = "SUCCESS";
     } else {
       const failedPayment = payments.filter(
-        (txn) => txn.payment.status === "FAILED"
+        (txn) => txn.payment_status === "FAILED"
       );
       if (failedPayment.length > 0) {
         orderStatus = "FAILED";
       }
     }
 
-    // MUST RETURN STATUS
     return {
       orderId,
       status: orderStatus,
@@ -87,13 +87,12 @@ const getPaymentStatus = async (orderId) => {
     };
 
   } catch (error) {
-    console.error("Error fetching status:", error.response?.data?.message || error);
-    return {
-      orderId,
-      status: "ERROR",
-    };
+    console.error("Error fetching status:", error);
+    return { orderId, status: "ERROR" };
   }
 };
+
+
 
 module.exports={
     createOrder,

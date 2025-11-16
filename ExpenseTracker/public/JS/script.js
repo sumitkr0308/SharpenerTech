@@ -1,53 +1,120 @@
 const API_URL = "http://localhost:4000/api/expenses";
 const token = localStorage.getItem("token");
 
-    const cashfree = Cashfree({
-            mode: "sandbox" // or "production"
-        });
 
-        document.getElementById("premiumBtn").addEventListener("click", async () => {
-            
-            // STEP 1: Call backend to create order
-            const response = await fetch("http://localhost:4000/api/payments/create-order", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    amount: 500,               // amount in rupees
-                    customerId: "USER_001",
-                    customerPhone: "9876543210"
-                })
-            });
+// Decode token to get userId
+function getUserIdFromToken() {
+  if (!token) return null;
 
-            const data = await response.json();
+  const tokenPayload = JSON.parse(atob(token.split(".")[1])); 
+  return tokenPayload.userId;
+}
 
-            if (!data.paymentSessionId) {
-                alert("Failed to create order: " + data.message);
-                return;
-            }
+const tokenUserId = getUserIdFromToken();
 
-            // STEP 2: Open Cashfree Checkout
-            const checkoutOptions = {
-                paymentSessionId: data.paymentSessionId,
-                redirectTarget: "_self",
-            };
 
-            cashfree.checkout(checkoutOptions);
+// PREMIUM UI
+
+function showPremiumUI() {
+  document.getElementById("premium-message").style.display = "block";
+  document.getElementById("premiumBtn").style.display = "none";
+  document.getElementById("leaderboardBtn").style.display = "block";
+}
+
+// Initially hide leaderboard
+document.getElementById("leaderboardBtn").style.display = "none";
+
+// CHECK PREMIUM STATUS FROM BACKEND
+
+async function checkPremiumStatus() {
+  try {
+    const response = await fetch("http://localhost:4000/user/status", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await response.json();
+
+    if (data.isPremium) {
+      localStorage.setItem("isPremium", "true");
+      showPremiumUI();
+    } else {
+      localStorage.setItem("isPremium", "false");
+    }
+  } catch (err) {
+    console.error("Premium status check failed", err);
+  }
+}
+
+// Show premium UI if stored
+if (localStorage.getItem("isPremium") === "true") {
+  showPremiumUI();
+}
+
+// PREMIUM → CREATE ORDER
+
+const cashfree = new Cashfree({ mode: "sandbox" });
+
+
+
+document.getElementById("premiumBtn").addEventListener("click", async () => {
+
+    const response = await fetch("http://localhost:4000/api/payments/create-order", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            amount: 500,
+            customerId: tokenUserId,
+            customerPhone: "9999999999"
         })
+    });
+
+    const data = await response.json();
+
+    cashfree.checkout({
+        paymentSessionId: data.paymentSessionId,
+        redirectTarget: "_self"
+    });
+});
+
+// ============================
+// LEADERBOARD
+// ============================
+document.getElementById("leaderboardBtn").addEventListener("click", async () => {
+  const response = await fetch("http://localhost:4000/premium/showleaderboard", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  const data = await response.json();
+
+  const container = document.getElementById("leaderboardContainer");
+  container.innerHTML = `<h3>Leaderboard</h3>`;
+
+  data.forEach((entry, index) => {
+    container.innerHTML += `
+      <p>${index + 1}. <strong>${entry.user.name}</strong> - ₹${entry.dataValues.totalAmount}</p>
+    `;
+  });
+});
 
 
+// REDIRECT IF NOT LOGGED IN
 
-// Redirect if user not logged in
 if (!token) {
   alert("Please login first.");
   window.location.href = "login.html";
 }
 
-// DOM Elements
+// ============================
+// EXPENSE FUNCTIONS (same as before)
+// ============================
 const expenseForm = document.getElementById("expenseForm");
 const expenseDisplay = document.getElementById("expenseDisplay");
 const addBtn = document.getElementById("AddBtn");
 
-// Render all expenses
+// Render expenses
 async function renderExpenses() {
   expenseDisplay.innerHTML = "";
 
@@ -58,25 +125,16 @@ async function renderExpenses() {
 
     const expenses = await response.json();
 
-    if (!response.ok) {
-      console.error("Failed to load expenses:", expenses);
-      alert(expenses.message || "Unable to fetch expenses. Please login again.");
-      return;
-    }
+    const list = Array.isArray(expenses) ? expenses : [];
 
-    // Wrap in array if single object
-    const expenseList = Array.isArray(expenses) ? expenses : [expenses];
-
-   
-
-    expenseList.forEach((exp) => addExpenseToList(exp));
+    list.forEach(exp => addExpenseToList(exp));
   } catch (error) {
     console.error("Error fetching expenses:", error);
   }
 }
 
-//  Add expense (POST) or Update expense (PUT)
-expenseForm.addEventListener("submit", async function (e) {
+// Add / update expense
+expenseForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const description = document.getElementById("expName").value.trim();
@@ -84,60 +142,43 @@ expenseForm.addEventListener("submit", async function (e) {
   const category = document.getElementById("expenseCategory").value.trim();
 
   if (!description || !amount || !category) {
-    alert("Please fill in all fields.");
+    alert("Fill all fields");
     return;
   }
 
   const expenseData = { description, amount, category };
   const editId = expenseForm.dataset.editId;
 
-  try {
-    let response;
-    if (editId) {
-      // Update existing expense
-      response = await fetch(`${API_URL}/${editId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(expenseData),
-      });
+  let response;
 
-      addBtn.textContent = "Add";
-      delete expenseForm.dataset.editId;
-    } else {
-      // ✅ Add new expense
-      response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(expenseData),
-      });
-    }
+  if (editId) {
+    response = await fetch(`${API_URL}/${editId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(expenseData)
+    });
 
-    const data = await response.json();
-
-    if (response.ok) {
-      if (editId) {
-        // Re-render all for simplicity
-        await renderExpenses();
-      } else {
-        addExpenseToList(data); // Add single expense dynamically
-      }
-      expenseForm.reset();
-    } else {
-      console.error("Error adding/updating expense:", data);
-      alert(data.message || "Failed to save expense.");
-    }
-  } catch (error) {
-    console.error("Error:", error);
+    delete expenseForm.dataset.editId;
+    addBtn.textContent = "Add";
+  } else {
+    response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(expenseData)
+    });
   }
+
+  renderExpenses();
+  expenseForm.reset();
 });
 
-// Add expense item to UI
+// Add to UI
 function addExpenseToList(exp) {
   const li = document.createElement("li");
   li.className =
@@ -149,40 +190,27 @@ function addExpenseToList(exp) {
       <span class="badge bg-secondary ms-2">${exp.category}</span>
     </div>
     <div>
-      <button class="btn btn-warning btn-sm me-2" 
+      <button class="btn btn-warning btn-sm me-2"
         onclick="editExpense(${exp.id}, '${exp.description}', ${exp.amount}, '${exp.category}')">Edit</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteExpense(${exp.id})">Delete</button>
+      <button class="btn btn-danger btn-sm"
+        onclick="deleteExpense(${exp.id})">Delete</button>
     </div>
   `;
 
   expenseDisplay.appendChild(li);
 }
 
-//  Delete expense
+// Delete expense
 async function deleteExpense(id) {
-  if (!confirm("Are you sure you want to delete this expense?")) return;
+  await fetch(`${API_URL}/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
 
-  try {
-    const response = await fetch(`${API_URL}/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      alert("Expense deleted!");
-      renderExpenses(); 
-    } else {
-      console.error("Delete error:", data);
-      alert(data.message || "Failed to delete expense.");
-    }
-  } catch (error) {
-    console.error("Error deleting expense:", error);
-  }
+  renderExpenses();
 }
 
-
+// Edit expense
 function editExpense(id, description, amount, category) {
   document.getElementById("expName").value = description;
   document.getElementById("amt").value = amount;
@@ -192,5 +220,8 @@ function editExpense(id, description, amount, category) {
   addBtn.textContent = "Update";
 }
 
-// ✅ Initial load
-document.addEventListener("DOMContentLoaded", renderExpenses);
+// Initial page load
+document.addEventListener("DOMContentLoaded", async () => {
+  await checkPremiumStatus();
+  renderExpenses();
+});

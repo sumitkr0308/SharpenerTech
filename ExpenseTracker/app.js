@@ -8,6 +8,7 @@ const userRoutes = require('./routes/userRoutes');
 const expenseController = require("./controllers/expenseController");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes=require("./routes/paymentRoutes");
+const premiumRoutes = require("./routes/premiumRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -26,6 +27,9 @@ app.use('/user', userRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
+
+// premium 
+app.use('/premium',premiumRoutes);
 // Sync database
 db.sync({ alter: true })
   .then(() => {
