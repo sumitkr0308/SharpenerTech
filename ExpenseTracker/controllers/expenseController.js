@@ -1,5 +1,6 @@
 const path=require("path");
 const Expenses=require("../models/expense");
+const User=require("../models/signupUser")
 
 const getExpenseHome=(req,res)=>{
 
@@ -31,6 +32,9 @@ const addExpense= async (req,res)=>{
             category,
             UserId:userId
         });
+        const user = await User.findByPk(userId);
+        user.totalExpense = (user.totalExpense || 0) + Number(amount);
+        await user.save();
         console.log("Expense created:", expense.dataValues);
         res.status(201).json(expense);
         

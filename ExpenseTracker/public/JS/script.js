@@ -129,7 +129,7 @@ document.getElementById("leaderboardBtn").addEventListener("click", async () => 
 
     data.forEach((entry, index) => {
       container.innerHTML += `
-        <p>${index + 1}. <strong>${entry.User?.name || "Unknown"}</strong> - ₹${entry.totalAmount}</p>
+        <p>${index + 1}. <strong>${entry.name || "Unknown"}</strong> - ₹${entry.totalExpense}</p>
       `;
     });
 
