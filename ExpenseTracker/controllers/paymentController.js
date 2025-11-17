@@ -69,6 +69,7 @@ const createOrderController = async (req, res) => {
 
 // GET PAYMENT STATUS
 
+
 const getPaymentStatusController = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -79,10 +80,23 @@ const getPaymentStatusController = async (req, res) => {
 
     const { status, payments } = result;
 
+    // Update payment entry
     await Payment.update(
       { status, transactions: payments },
       { where: { orderId } }
     );
+
+    // ⭐ IF PAYMENT SUCCESS → MAKE USER PREMIUM
+    if (status === "SUCCESS") {
+      const payment = await Payment.findOne({ where: { orderId } });
+
+      if (payment) {
+        await User.update(
+          { isPremium: true },
+          { where: { id: payment.customerId } }
+        );
+      }
+    }
 
     return res.status(200).json({
       success: true,
@@ -100,6 +114,8 @@ const getPaymentStatusController = async (req, res) => {
     });
   }
 };
+
+
 
 
 module.exports = {

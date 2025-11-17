@@ -1,26 +1,27 @@
 const Expense = require("../models/expense");
 const User = require("../models/signupUser");
-const { Sequelize } = require("sequelize");
+const sequelize = require("../utils/db");
 
 exports.showLeaderboard = async (req, res) => {
   try {
-    // Confirm user is premium
-    const currentUser = await User.findByPk(req.user.userId);
-    if (!currentUser.isPremium) {
-      return res.status(403).json({ message: "Access denied: Not a premium user" });
+    const userId = req.user.userId;
+
+    const user = await User.findByPk(userId);
+    if (!user || !user.isPremium) {
+      return res.status(403).json({ message: "Access denied. Not a premium user." });
     }
 
     const leaderboard = await Expense.findAll({
       attributes: [
         "UserId",
-        [Sequelize.fn("SUM", Sequelize.col("amount")), "totalAmount"]
+        [sequelize.fn("SUM", sequelize.col("amount")), "totalAmount"],
       ],
-      group: ["UserId"],
-      order: [[Sequelize.literal("totalAmount"), "DESC"]],
+      group: ["UserId", "User.id"],
+      order: [[sequelize.fn("SUM", sequelize.col("amount")), "DESC"]],
       include: [
         {
           model: User,
-          attributes: ["name"]
+          attributes: ["id", "name", "email"],
         }
       ]
     });
@@ -29,6 +30,6 @@ exports.showLeaderboard = async (req, res) => {
 
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Failed to load leaderboard" });
+    res.status(500).json({ message: "Server error", error });
   }
 };

@@ -7,55 +7,55 @@
   <h2>Processing Payment...</h2>
 
   <script>
-    async function pollPaymentStatus(orderId) {
-      try {
-        const response = await fetch(
-          "http://localhost:4000/api/payments/payment-status/" + orderId
-        );
+    async function checkPayment() {
 
-        const data = await response.json();
-        console.log("Payment Status Response:", data);
-
-        if (data.status === "SUCCESS") {
-          alert("Payment Successful!");
-
-          localStorage.setItem("isPremium", "true");
-
-          window.location.href = "expense.html";
-        }
-        else if (data.status === "FAILED") {
-          alert("Payment Failed!");
-          window.location.href = "expense.html";
-        }
-        else {
-          console.log("Payment still pending... checking again in 3 seconds...");
-          setTimeout(() => pollPaymentStatus(orderId), 3000);
-        }
-
-      } catch (error) {
-        console.error("Error checking payment:", error);
-        alert("Something went wrong!");
-        window.location.href = "expense.html";
-      }
-    }
-
-    function startChecking() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const orderId = urlParams.get("orderId");
+      const token = localStorage.getItem("token"); // ✅ get token
+      const orderId = new URLSearchParams(window.location.search).get("orderId");
 
       if (!orderId) {
         alert("Invalid payment callback!");
         return;
       }
 
-      // wait before checking to allow Cashfree server to update
-      setTimeout(() => {
-        pollPaymentStatus(orderId);
-      }, 3000);
+      try {
+        const response = await fetch(
+          "http://localhost:4000/api/payments/payment-status/" + orderId,
+          {
+            headers: {
+              "Authorization": "Bearer " + token   // ⭐ FIX: send token!
+            }
+          }
+        );
+
+        const data = await response.json();
+
+        console.log("Payment status:", data);
+
+        if (data.status === "SUCCESS") {
+
+          // Update premium in localStorage
+          localStorage.setItem("isPremium", "true");
+
+          alert("Payment Successful!");
+
+          window.location.href = "expense.html";
+        } else if (data.status === "FAILED") {
+
+          alert("Payment Failed :(");
+          window.location.href = "expense.html";
+        } else {
+          // still pending
+          setTimeout(checkPayment, 2000);
+        }
+
+      } catch (err) {
+        console.error("Error:", err);
+        alert("Something went wrong!");
+        window.location.href = "expense.html";
+      }
     }
 
-    // Start checking payment
-    startChecking();
+    checkPayment();
   </script>
 
 </body>
