@@ -2,7 +2,8 @@ const path=require("path");
 const Expenses=require("../models/expense");
 const User=require("../models/signupUser");
 const {GoogleGenAI}=require("@google/genai");
-require("dotenv").config()
+require("dotenv").config();
+const sequelize=require("../utils/db");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
@@ -27,6 +28,7 @@ const getAllExpenses = async (req, res) => {
 
 // add Expenses
 const addExpense= async (req,res)=>{
+    const transaction=await sequelize.transaction(); 
     try {
         const {amount,description}=req.body;
         const response=await ai.models.generateContent({
@@ -43,22 +45,25 @@ const addExpense= async (req,res)=>{
             amount,
             description,
             category,
-            UserId:userId
-        });
-        const user = await User.findByPk(userId);
+            UserId:userId,
+        },{transaction});
+        const user = await User.findByPk(userId,{transaction});
         user.totalExpense = (user.totalExpense || 0) + Number(amount);
-        await user.save();
+        await user.save({transaction});
         console.log("Expense created:", expense.dataValues);
+        await transaction.commit();
         res.status(201).json(expense);
         
         
     } catch (error) {
+        await transaction.rollback();
         res.status(500).json({error:error.message});
     }
     
 };
 
 const editExpense = async (req, res) => {
+    const transaction=await sequelize.transaction();
     try {
         const { id } = req.params;
         const userId = req.user.userId;
@@ -67,10 +72,11 @@ const editExpense = async (req, res) => {
         // 1. Find the existing expense and user
         const expense = await Expenses.findOne({ where: { id: id, UserId: userId } });
         if (!expense) {
+            await transaction.rollback();
             return res.status(404).json({ message: "Expense not found" });
         }
         
-        const user = await User.findByPk(userId);
+        const user = await User.findByPk(userId,{transaction});
         const originalAmount = expense.amount; // Store original amount
         const amountDifference = Number(amount) - originalAmount;
         
@@ -89,14 +95,15 @@ const editExpense = async (req, res) => {
         expense.description = description;
         expense.amount = amount;
         expense.category = category;
-        await expense.save();
+        await expense.save({transaction});
 
         // 4. Update the user's totalExpense
         user.totalExpense = (user.totalExpense || 0) + amountDifference;
-        await user.save();
-        
+        await user.save({transaction});
+        await transaction.commit();
         res.status(200).json(expense);
     } catch (error) {
+       await transaction.rollback();
         res.status(500).json({ message: "Error updating expense", error: error.message });
     }
 };
