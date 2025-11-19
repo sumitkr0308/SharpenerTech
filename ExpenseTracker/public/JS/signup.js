@@ -23,7 +23,7 @@ form.addEventListener('submit',async(event)=>{
         const data = await response.json();
 
         if (response.ok) {
-          alert("Signup successful! Redirecting to login page...");
+          
           window.location.href = "login.html";
         } else {
           alert(data.message || "Signup failed. Try again.");

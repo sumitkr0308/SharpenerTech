@@ -1,6 +1,10 @@
 const path=require("path");
 const Expenses=require("../models/expense");
-const User=require("../models/signupUser")
+const User=require("../models/signupUser");
+const {GoogleGenAI}=require("@google/genai");
+require("dotenv").config()
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
 const getExpenseHome=(req,res)=>{
 
@@ -24,7 +28,16 @@ const getAllExpenses = async (req, res) => {
 // add Expenses
 const addExpense= async (req,res)=>{
     try {
-        const {amount,description,category}=req.body;
+        const {amount,description}=req.body;
+        const response=await ai.models.generateContent({
+          "model":"gemini-2.5-flash",
+          "contents":`Give ONLY one expense category for the following text:
+          "${description}"
+          Return just ONE category word or phrase.Do NOT add explanations.`
+        });
+        console.log(response.text);
+        let category=response.text;
+     
         const userId=req.user.userId;
         const expense= await Expenses.create({
             amount,
@@ -45,40 +58,74 @@ const addExpense= async (req,res)=>{
     
 };
 
-const editExpense=async(req,res)=>{
-   try {
-         const {id}=req.params;
+const editExpense = async (req, res) => {
+    try {
+        const { id } = req.params;
         const userId = req.user.userId;
-        const {amount,description,category}=req.body;
-        const updatedExpense=await Expenses.findOne({where:{id:id,UserId:userId}});
-        updatedExpense.description=description;
-        updatedExpense.amount=amount;
-        updatedExpense.category=category;
+        const { amount, description } = req.body;
         
-        await updatedExpense.save();
+        // 1. Find the existing expense and user
+        const expense = await Expenses.findOne({ where: { id: id, UserId: userId } });
+        if (!expense) {
+            return res.status(404).json({ message: "Expense not found" });
+        }
+        
+        const user = await User.findByPk(userId);
+        const originalAmount = expense.amount; // Store original amount
+        const amountDifference = Number(amount) - originalAmount;
+        
+        // 2. Re-categorize if description changed
+        let category = expense.category;
+        if (description !== expense.description) {
+             const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+             const response = await ai.models.generateContent({
+                 "model": "gemini-2.5-flash",
+                 "contents": `Give ONLY one expense category for the following text: "${description}" Return just ONE category word or phrase.Do NOT add explanations.`
+             });
+             category = response.text;
+        }
 
-        res.status(200).json(updatedExpense);
-    
-   } catch (error) {
-    res.status(500).json({ message: "Error updating expense", error: error.message });
-   }
+        // 3. Update the expense record
+        expense.description = description;
+        expense.amount = amount;
+        expense.category = category;
+        await expense.save();
 
-
+        // 4. Update the user's totalExpense
+        user.totalExpense = (user.totalExpense || 0) + amountDifference;
+        await user.save();
+        
+        res.status(200).json(expense);
+    } catch (error) {
+        res.status(500).json({ message: "Error updating expense", error: error.message });
+    }
 };
 
-const deleteExpense=async(req,res)=>{
-   try {
+const deleteExpense = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.userId;
 
-    const {id}=req.params;
-    const userId=req.user.userId;
-    await Expenses.destroy({ where: { id: id,UserId:userId } });
-    res.status(200).json({ message: 'Expense deleted' });
-    
-   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete expense' });
-   }
-    
+        // 1. Find the expense to get its amount before deleting
+        const expense = await Expenses.findOne({ where: { id: id, UserId: userId } });
+        if (!expense) {
+            return res.status(404).json({ message: "Expense not found" });
+        }
+        
+        const amountToDelete = expense.amount;
 
+        // 2. Delete the expense
+        await Expenses.destroy({ where: { id: id, UserId: userId } });
+
+        // 3. Update the user's totalExpense
+        const user = await User.findByPk(userId);
+        user.totalExpense = (user.totalExpense || 0) - Number(amountToDelete);
+        await user.save();
+
+        res.status(200).json({ message: 'Expense deleted' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete expense' });
+    }
 }
 
 module.exports={

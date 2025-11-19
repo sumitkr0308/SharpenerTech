@@ -127,9 +127,9 @@ document.getElementById("leaderboardBtn").addEventListener("click", async () => 
       return;
     }
 
-    data.forEach((entry, index) => {
+    data.forEach((user, index) => {
       container.innerHTML += `
-        <p>${index + 1}. <strong>${entry.name || "Unknown"}</strong> - ₹${entry.totalExpense}</p>
+        <p>${index + 1}. <strong>${user.name || "Unknown"}</strong> - ₹${user.totalExpense}</p>
       `;
     });
 
@@ -180,17 +180,18 @@ expenseForm.addEventListener("submit", async (e) => {
 
   const description = document.getElementById("expName").value.trim();
   const amount = parseFloat(document.getElementById("amt").value);
-  const category = document.getElementById("expenseCategory").value.trim();
+  // const category = document.getElementById("expenseCategory").value.trim();
 
-  if (!description || !amount || !category) {
+  if (!description || !amount ) {
     alert("Please fill all fields");
     return;
   }
 
   const editId = expenseForm.dataset.editId;
-  const expenseData = { description, amount, category };
+  
 
   if (editId) {
+      const expenseData = { description, amount};
     await fetch(`${API_URL}/${editId}`, {
       method: "PUT",
       headers: {
@@ -204,6 +205,7 @@ expenseForm.addEventListener("submit", async (e) => {
     addBtn.textContent = "Add";
 
   } else {
+    const expenseData = { description, amount};
     await fetch(API_URL, {
       method: "POST",
       headers: {
