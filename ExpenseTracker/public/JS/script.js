@@ -1,20 +1,15 @@
-
 // CONFIG
 
 const API_URL = "http://localhost:4000/api/expenses";
 const token = localStorage.getItem("token");
 
-
 // handle logout
-const logoutBtn=document.getElementById("logout-btn");
+const logoutBtn = document.getElementById("logout-btn");
 
-logoutBtn.addEventListener('click',()=>{
-
-  localStorage.removeItem('token');
+logoutBtn.addEventListener("click", () => {
+  localStorage.removeItem("token");
   window.location.href = "login.html";
-
-})
-
+});
 
 // TOKEN → DECODE USER ID
 
@@ -32,7 +27,6 @@ function getUserIdFromToken() {
 
 const tokenUserId = getUserIdFromToken();
 
-
 //PREMIUM UI HANDLING
 
 function showPremiumUI() {
@@ -43,16 +37,12 @@ function showPremiumUI() {
 
 document.getElementById("leaderboardBtn").style.display = "none";
 
-
-
-
-
 // CHECK PREMIUM STATUS FROM BACKEND
 
 async function checkPremiumStatus() {
   try {
     const response = await fetch("http://localhost:4000/user/status", {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     const data = await response.json();
@@ -63,13 +53,10 @@ async function checkPremiumStatus() {
     } else {
       localStorage.setItem("isPremium", "false");
     }
-
   } catch (err) {
     console.error("Premium status check failed:", err);
   }
 }
-
-
 
 // CASHFREE PAYMENT (Premium Purchase)
 
@@ -77,18 +64,21 @@ const cashfree = new Cashfree({ mode: "sandbox" });
 
 document.getElementById("premiumBtn").addEventListener("click", async () => {
   try {
-    const response = await fetch("http://localhost:4000/api/payments/create-order", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        amount: 500,
-        customerId: tokenUserId,
-        customerPhone: "9999999999"
-      })
-    });
+    const response = await fetch(
+      "http://localhost:4000/api/payments/create-order",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          amount: 500,
+          customerId: tokenUserId,
+          customerPhone: "9999999999",
+        }),
+      }
+    );
 
     const data = await response.json();
 
@@ -99,45 +89,48 @@ document.getElementById("premiumBtn").addEventListener("click", async () => {
 
     cashfree.checkout({
       paymentSessionId: data.paymentSessionId,
-      redirectTarget: "_self"
+      redirectTarget: "_self",
     });
-
   } catch (err) {
     console.error("Payment error:", err);
     alert("Payment failed");
   }
 });
 
-
 //  LEADERBOARD (Only For Premium Users)
 
-document.getElementById("leaderboardBtn").addEventListener("click", async () => {
-  try {
-    const response = await fetch("http://localhost:4000/premium/showleaderboard", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+document
+  .getElementById("leaderboardBtn")
+  .addEventListener("click", async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:4000/premium/showleaderboard",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    const data = await response.json();
+      const data = await response.json();
 
-    const container = document.getElementById("leaderboardContainer");
-    container.innerHTML = `<h3>Leaderboard</h3>`;
+      const container = document.getElementById("leaderboardContainer");
+      container.innerHTML = `<h3>Leaderboard</h3>`;
 
-    if (!Array.isArray(data)) {
-      container.innerHTML += `<p>${data.message || "Access Denied"}</p>`;
-      return;
-    }
+      if (!Array.isArray(data)) {
+        container.innerHTML += `<p>${data.message || "Access Denied"}</p>`;
+        return;
+      }
 
-    data.forEach((user, index) => {
-      container.innerHTML += `
-        <p>${index + 1}. <strong>${user.name || "Unknown"}</strong> - ₹${user.totalExpense}</p>
+      data.forEach((user, index) => {
+        container.innerHTML += `
+        <p>${index + 1}. <strong>${user.name || "Unknown"}</strong> - ₹${
+          user.totalExpense
+        }</p>
       `;
-    });
-
-  } catch (err) {
-    console.error("Leaderboard error", err);
-  }
-});
-
+      });
+    } catch (err) {
+      console.error("Leaderboard error", err);
+    }
+  });
 
 //REDIRECT IF NOT LOGGED IN
 
@@ -145,8 +138,6 @@ if (!token) {
   alert("Please login first.");
   window.location.href = "login.html";
 }
-
-
 
 // EXPENSE FEATURES
 
@@ -160,19 +151,17 @@ async function renderExpenses() {
 
   try {
     const response = await fetch(API_URL, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     const expenses = await response.json();
     const list = Array.isArray(expenses) ? expenses : [];
 
-    list.forEach(exp => addExpenseToList(exp));
-
+    list.forEach((exp) => addExpenseToList(exp));
   } catch (err) {
     console.error("Error fetching expenses:", err);
   }
 }
-
 
 // Add / Update Expense
 expenseForm.addEventListener("submit", async (e) => {
@@ -182,44 +171,41 @@ expenseForm.addEventListener("submit", async (e) => {
   const amount = parseFloat(document.getElementById("amt").value);
   // const category = document.getElementById("expenseCategory").value.trim();
 
-  if (!description || !amount ) {
+  if (!description || !amount) {
     alert("Please fill all fields");
     return;
   }
 
   const editId = expenseForm.dataset.editId;
-  
 
   if (editId) {
-      const expenseData = { description, amount};
+    const expenseData = { description, amount };
     await fetch(`${API_URL}/${editId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(expenseData)
+      body: JSON.stringify(expenseData),
     });
 
     delete expenseForm.dataset.editId;
     addBtn.textContent = "Add";
-
   } else {
-    const expenseData = { description, amount};
+    const expenseData = { description, amount };
     await fetch(API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(expenseData)
+      body: JSON.stringify(expenseData),
     });
   }
 
   renderExpenses();
   expenseForm.reset();
 });
-
 
 // Add Item To UI
 function addExpenseToList(exp) {
@@ -248,17 +234,15 @@ function addExpenseToList(exp) {
   expenseDisplay.appendChild(li);
 }
 
-
 // Delete Expense
 async function deleteExpense(id) {
   await fetch(`${API_URL}/${id}`, {
     method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` },
   });
 
   renderExpenses();
 }
-
 
 // Edit Expense
 function editExpense(id, description, amount, category) {
@@ -270,11 +254,9 @@ function editExpense(id, description, amount, category) {
   addBtn.textContent = "Update";
 }
 
-
-
 //INITIAL LOAD
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await checkPremiumStatus();   
+  await checkPremiumStatus();
   renderExpenses();
 });
