@@ -90,6 +90,7 @@ const checkStatus=async (req, res) => {
     res.status(500).json({ message: "Error fetching status" });
   }
 };
+
 module.exports={
     getSignPage,
     signupUser,

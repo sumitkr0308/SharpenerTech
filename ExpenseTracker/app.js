@@ -9,6 +9,7 @@ const expenseController = require("./controllers/expenseController");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes=require("./routes/paymentRoutes");
 const premiumRoutes = require("./routes/premiumRoutes");
+const passwordRoutes=require("./routes/passwordRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -27,6 +28,7 @@ app.use('/user', userRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/password",passwordRoutes)
 
 // premium 
 app.use('/premium',premiumRoutes);
