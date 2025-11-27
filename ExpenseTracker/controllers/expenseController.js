@@ -11,6 +11,7 @@ const getExpenseHome = (req, res) => {
   res.sendFile(path.join(__dirname, "..", "view", "expense.html"));
 };
 
+
 // get all expense
 
 const getAllExpenses = async (req, res) => {
