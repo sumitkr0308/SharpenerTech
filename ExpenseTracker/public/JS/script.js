@@ -11,6 +11,12 @@ logoutBtn.addEventListener("click", () => {
   window.location.href = "login.html";
 });
 
+// report
+const reportBtn=document.getElementById("viewReportBtn")
+reportBtn.addEventListener("click", () => {
+  window.location.href = "report.html";
+});
+
 // TOKEN → DECODE USER ID
 
 function getUserIdFromToken() {
@@ -260,3 +266,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   await checkPremiumStatus();
   renderExpenses();
 });
+
