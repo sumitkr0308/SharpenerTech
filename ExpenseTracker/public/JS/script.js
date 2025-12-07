@@ -205,8 +205,22 @@ expenseForm.addEventListener("submit", async (e) => {
     delete expenseForm.dataset.editId;
     addBtn.textContent = "Add";
   } else {
-    const expenseData = { description, amount };
-    await fetch(API_URL, {
+    const tempId=`temp-${Date.now()}`;
+    addExpenseToList({
+    id: tempId,
+    description,
+    amount,
+    category: "Categorizing...."
+  });
+   sendExpenseToServer({ description, amount }, tempId);
+  }
+
+  expenseForm.reset();
+});
+
+async function sendExpenseToServer(expenseData, tempId) {
+  try {
+    const response = await fetch(API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -214,38 +228,54 @@ expenseForm.addEventListener("submit", async (e) => {
       },
       body: JSON.stringify(expenseData),
     });
-  }
 
-  renderExpenses();
-  expenseForm.reset();
-});
+    const savedExpense = await response.json();
+
+    updateCategory(tempId, savedExpense);
+    
+  } catch (err) {
+    console.error("Error adding expense:", err);
+  }
+}
+
+function updateCategory(tempId, savedExpense) {
+  const element = document.querySelector(`[data-id="${tempId}"]`);
+  if (!element) return;
+
+  element.dataset.id = savedExpense.id;
+  element.querySelector(".categoryBadge").textContent = savedExpense.category;
+}
+
 
 // Add Item To UI
 function addExpenseToList(exp) {
   const li = document.createElement("li");
+  li.dataset.id = exp.id; // <-- important
+
   li.className =
     "list-group-item d-flex justify-content-between align-items-center my-2 border p-2";
 
   li.innerHTML = `
     <div>
       <strong>${exp.description}</strong> - ₹${exp.amount}
-      <span class="badge bg-secondary ms-2">${exp.category}</span>
+      <span class="badge bg-secondary ms-2 categoryBadge">${exp.category}</span>
     </div>
     <div>
       <button class="btn btn-warning btn-sm me-2"
-        onclick="editExpense(${exp.id}, '${exp.description}', ${exp.amount}, '${exp.category}')">
+        onclick="editExpense('${exp.id}', '${exp.description}', ${exp.amount}, '${exp.category}')">
         Edit
       </button>
 
       <button class="btn btn-danger btn-sm"
-        onclick="deleteExpense(${exp.id})">
+        onclick="deleteExpense('${exp.id}')">
         Delete
       </button>
     </div>
   `;
 
-  expenseDisplay.appendChild(li);
+  expenseDisplay.prepend(li); // NEW items go on top
 }
+
 
 // Delete Expense
 async function deleteExpense(id) {
@@ -258,10 +288,10 @@ async function deleteExpense(id) {
 }
 
 // Edit Expense
-function editExpense(id, description, amount, category) {
+function editExpense(id, description, amount) {
   document.getElementById("expName").value = description;
   document.getElementById("amt").value = amount;
-  document.getElementById("expenseCategory").value = category;
+  
 
   expenseForm.dataset.editId = id;
   addBtn.textContent = "Update";
