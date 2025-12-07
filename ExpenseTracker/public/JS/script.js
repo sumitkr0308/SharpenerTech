@@ -151,23 +151,30 @@ const expenseForm = document.getElementById("expenseForm");
 const expenseDisplay = document.getElementById("expenseDisplay");
 const addBtn = document.getElementById("AddBtn");
 
+let currentPage = 1;
+const limit = 5;
+let totalPages = 1;
+
 // Load all expenses
 async function renderExpenses() {
   expenseDisplay.innerHTML = "";
 
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch(`${API_URL}?page=${currentPage}&limit=${limit}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    const expenses = await response.json();
-    const list = Array.isArray(expenses) ? expenses : [];
-
-    list.forEach((exp) => addExpenseToList(exp));
+    const data=await response.json();
+    const expenses = Array.isArray(data.expenses)?data.expenses:[];
+    expenses.forEach((exp) => addExpenseToList(exp));
+    // pagination
+    totalPages=data.totalPages;
+    paginationShow();
   } catch (err) {
     console.error("Error fetching expenses:", err);
   }
 }
+
 
 // Add / Update Expense
 expenseForm.addEventListener("submit", async (e) => {
@@ -175,7 +182,7 @@ expenseForm.addEventListener("submit", async (e) => {
 
   const description = document.getElementById("expName").value.trim();
   const amount = parseFloat(document.getElementById("amt").value);
-  // const category = document.getElementById("expenseCategory").value.trim();
+
 
   if (!description || !amount) {
     alert("Please fill all fields");
@@ -259,6 +266,41 @@ function editExpense(id, description, amount, category) {
   expenseForm.dataset.editId = id;
   addBtn.textContent = "Update";
 }
+
+function paginationShow(){
+   document.getElementById("pageInfo").innerText = `Page ${currentPage} of ${totalPages}`;
+
+  document.getElementById("prevBtn").disabled = currentPage === 1;
+  document.getElementById("firstBtn").disabled = currentPage === 1;
+
+  document.getElementById("nextBtn").disabled = currentPage === totalPages;
+  document.getElementById("lastBtn").disabled = currentPage === totalPages;
+}
+
+// paginationbtn event
+document.getElementById("nextBtn").addEventListener("click", () => {
+  if (currentPage < totalPages) {
+    currentPage++;
+    renderExpenses();
+  }
+});
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderExpenses();
+  }
+});
+
+document.getElementById("firstBtn").addEventListener("click", () => {
+  currentPage = 1;
+  renderExpenses();
+});
+
+document.getElementById("lastBtn").addEventListener("click", () => {
+  currentPage = totalPages;
+  renderExpenses();
+});
 
 //INITIAL LOAD
 

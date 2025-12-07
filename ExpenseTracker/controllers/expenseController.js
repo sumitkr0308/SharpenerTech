@@ -4,6 +4,7 @@ const User = require("../models/signupUser");
 const { GoogleGenAI } = require("@google/genai");
 require("dotenv").config();
 const sequelize = require("../utils/db");
+const expense = require("../models/expense");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -15,11 +16,27 @@ const getExpenseHome = (req, res) => {
 // get all expense
 
 const getAllExpenses = async (req, res) => {
-  console.log("Decoded user:", req.user);
+
   try {
     const userId = req.user.userId;
-    const expenses = await Expenses.findAll({ where: { UserId: userId } });
-    res.status(200).json(expenses);
+
+    // pagination params
+    const page=Number(req.query.page)||1;
+    const limit=Number(req.query.limit)||5;
+    const offset=(page-1)*limit;
+    const {count, rows}=await Expenses.findAndCountAll({
+      where:{UserId:userId},
+      limit,
+      offset,
+      order:[["createdAt", "DESC"]]  //sorting 
+
+    });
+    res.status(200).json({
+      expenses:rows,
+      currentPage:page,
+      totalPages:Math.ceil(count/limit),
+      totalCount:count
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
