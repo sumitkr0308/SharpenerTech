@@ -151,9 +151,24 @@ const expenseForm = document.getElementById("expenseForm");
 const expenseDisplay = document.getElementById("expenseDisplay");
 const addBtn = document.getElementById("AddBtn");
 
+// pagination
 let currentPage = 1;
-const limit = 5;
+let limit = parseInt(localStorage.getItem("pageLimit")) || 10;
 let totalPages = 1;
+
+document.getElementById("pageLimitSelect").value = limit;
+
+document.getElementById("pageLimitSelect").addEventListener("change", (e) => {
+  limit = parseInt(e.target.value);
+
+  // Store preference persistently
+  localStorage.setItem("pageLimit", limit);
+
+  currentPage = 1;  // reset to first page
+  renderExpenses();
+});
+
+
 
 // Load all expenses
 async function renderExpenses() {
@@ -205,52 +220,60 @@ expenseForm.addEventListener("submit", async (e) => {
     delete expenseForm.dataset.editId;
     addBtn.textContent = "Add";
   } else {
-    const tempId=`temp-${Date.now()}`;
-    addExpenseToList({
-    id: tempId,
-    description,
-    amount,
-    category: "Categorizing...."
-  });
-   sendExpenseToServer({ description, amount }, tempId);
-  }
-
-  expenseForm.reset();
-});
-
-async function sendExpenseToServer(expenseData, tempId) {
-  try {
-    const response = await fetch(API_URL, {
+     await fetch(API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(expenseData),
+      body: JSON.stringify({ description, amount }),
+    });
+       // Fetch updated count to determine last page
+     const countRes = await fetch(`${API_URL}?page=1&limit=${limit}`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
 
-    const savedExpense = await response.json();
-
-    updateCategory(tempId, savedExpense);
-    
-  } catch (err) {
-    console.error("Error adding expense:", err);
+     const countData = await countRes.json();
+    totalPages = countData.totalPages;
+     currentPage = totalPages;
   }
-}
+  expenseForm.reset();
+  renderExpenses();
+});
 
-function updateCategory(tempId, savedExpense) {
-  const element = document.querySelector(`[data-id="${tempId}"]`);
-  if (!element) return;
+// async function sendExpenseToServer(expenseData, tempId) {
+//   try {
+//     const response = await fetch(API_URL, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//       body: JSON.stringify(expenseData),
+//     });
 
-  element.dataset.id = savedExpense.id;
-  element.querySelector(".categoryBadge").textContent = savedExpense.category;
-}
+//     const savedExpense = await response.json();
+
+//     updateCategory(tempId, savedExpense);
+    
+//   } catch (err) {
+//     console.error("Error adding expense:", err);
+//   }
+// }
+
+// function updateCategory(tempId, savedExpense) {
+//   const element = document.querySelector(`[data-id="${tempId}"]`);
+//   if (!element) return;
+
+//   element.dataset.id = savedExpense.id;
+//   element.querySelector(".categoryBadge").textContent = savedExpense.category;
+// }
 
 
 // Add Item To UI
 function addExpenseToList(exp) {
   const li = document.createElement("li");
-  li.dataset.id = exp.id; // <-- important
+  li.dataset.id = exp.id; 
 
   li.className =
     "list-group-item d-flex justify-content-between align-items-center my-2 border p-2";
@@ -272,8 +295,8 @@ function addExpenseToList(exp) {
       </button>
     </div>
   `;
+expenseDisplay.appendChild(li);
 
-  expenseDisplay.prepend(li); // NEW items go on top
 }
 
 
@@ -284,6 +307,14 @@ async function deleteExpense(id) {
     headers: { Authorization: `Bearer ${token}` },
   });
 
+    const response = await fetch(`${API_URL}?page=${currentPage}&limit=${limit}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+    const data = await response.json();
+    if (data.expenses.length === 0 && currentPage > 1) {
+    currentPage--;
+  }
+  
   renderExpenses();
 }
 

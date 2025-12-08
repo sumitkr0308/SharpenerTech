@@ -22,7 +22,7 @@ const getAllExpenses = async (req, res) => {
 
     // pagination params
     const page=Number(req.query.page)||1;
-    const limit=Number(req.query.limit)||5;
+    const limit=Number(req.query.limit)||10;
     const offset=(page-1)*limit;
     const {count, rows}=await Expenses.findAndCountAll({
       where:{UserId:userId},

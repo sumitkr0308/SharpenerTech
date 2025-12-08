@@ -46,9 +46,19 @@
     </div>
   <div class="container mt-4">
   <div class="row">
+     <div class="d-flex justify-content-end align-items-center gap-2 mb-4">
+        <label for="" class="fw-bold"> Select Expenses per page: </label>
+        <select name="pageLimitSelect" id="pageLimitSelect" class="form-select form-select-sm " style="width: 10vw;">
+           <option value="2">2</option>
+           <option value="5">5</option>
+           <option value="10">10</option>
+           <option value="15">15</option>
+        </select>
 
+      </div>
     <!-- Expense List -->
     <div class="col-md-6 d-flex justify-content-center">
+     
       <ul id="expenseDisplay" class="list-group w-100"></ul>
     </div>
        <div class="d-flex justify-content-center mt-3 gap-2">
@@ -59,8 +69,7 @@
 
         <button id="nextBtn" class="btn btn-secondary btn-sm">Next</button>
         <button id="lastBtn" class="btn btn-secondary btn-sm">Last</button>
-</div>
-
+        </div>
 
     <!-- Leaderboard -->
     <div class="col-md-6 d-flex justify-content-center">
