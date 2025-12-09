@@ -46,7 +46,7 @@ const getAllExpenses = async (req, res) => {
 const addExpense = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
-    const { amount, description } = req.body;
+    const { amount, description,note } = req.body;
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Give ONLY one expense category for the following text:
@@ -61,6 +61,7 @@ const addExpense = async (req, res) => {
       {
         amount,
         description,
+        note,
         category,
         UserId: userId,
       },

@@ -2,7 +2,7 @@ const {DataTypes}=require("sequelize");
 const sequelize=require("../utils/db");
 const User=require("./signupUser");
 
-const expense= sequelize.define('expense',{
+const expense= sequelize.define('expenses',{
     amount:{
         type:DataTypes.INTEGER,
         allowNull:false
@@ -14,7 +14,12 @@ const expense= sequelize.define('expense',{
     category:{
         type:DataTypes.STRING,
         allowNull:false
-    }
+    },
+     note: {
+        type:DataTypes.STRING,
+        allowNull: true,
+        },
+
 });
 
 

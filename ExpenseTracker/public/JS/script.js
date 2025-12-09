@@ -197,9 +197,10 @@ expenseForm.addEventListener("submit", async (e) => {
 
   const description = document.getElementById("expName").value.trim();
   const amount = parseFloat(document.getElementById("amt").value);
+  const note=document.getElementById("note").value.trim();
 
 
-  if (!description || !amount) {
+  if (!description || !amount || !note) {
     alert("Please fill all fields");
     return;
   }
@@ -207,7 +208,7 @@ expenseForm.addEventListener("submit", async (e) => {
   const editId = expenseForm.dataset.editId;
 
   if (editId) {
-    const expenseData = { description, amount };
+    const expenseData = { description, amount,note };
     await fetch(`${API_URL}/${editId}`, {
       method: "PUT",
       headers: {
@@ -226,7 +227,7 @@ expenseForm.addEventListener("submit", async (e) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ description, amount }),
+      body: JSON.stringify({ description, amount,note }),
     });
        // Fetch updated count to determine last page
      const countRes = await fetch(`${API_URL}?page=1&limit=${limit}`, {
@@ -282,6 +283,7 @@ function addExpenseToList(exp) {
     <div>
       <strong>${exp.description}</strong> - ₹${exp.amount}
       <span class="badge bg-secondary ms-2 categoryBadge">${exp.category}</span>
+      <span class="badge bg-secondary ms-2 categoryBadge">${exp.note}</span>
     </div>
     <div>
       <button class="btn btn-warning btn-sm me-2"
@@ -319,9 +321,10 @@ async function deleteExpense(id) {
 }
 
 // Edit Expense
-function editExpense(id, description, amount) {
+function editExpense(id, description, amount,note) {
   document.getElementById("expName").value = description;
   document.getElementById("amt").value = amount;
+  document.getElementById("note")=note;
   
 
   expenseForm.dataset.editId = id;
