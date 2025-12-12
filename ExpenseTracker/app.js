@@ -1,6 +1,12 @@
 const express = require("express");
+const path=require('path');
+const fs=require('fs');
 const cors = require('cors');
+const morgan=require('morgan');
 const app = express();
+require("dotenv").config();
+
+const port=process.env.PORT;
 
 const db = require("./utils/db");
 const expenseRoutes = require("./routes/expenseRoutes");
@@ -16,6 +22,7 @@ app.use(express.json());
 app.use(express.static('public'));
 
 app.use(express.urlencoded({ extended: true }));
+
 
 // Models
 require("./models/signupUser");
@@ -34,9 +41,15 @@ app.use("/password",passwordRoutes)
 
 // premium 
 app.use('/premium',premiumRoutes);
+
+const accessLogStream=fs.createWriteStream(path.join(__dirname,'access.log'),{
+  flags:'a'
+})
+
+app.use(morgan('combined',{stream:accessLogStream}));
 // Sync database
 db.sync({ alter: true })
   .then(() => {
-    app.listen(4000, () => console.log("🚀 Server running on port 4000"));
+    app.listen(port, () => console.log(` Server running on ${port}`));
   })
-  .catch(err => console.error("❌ Database error:", err));
+  .catch(err => console.error(" Database error:", err));
